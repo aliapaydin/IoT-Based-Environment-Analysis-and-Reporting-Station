@@ -1,0 +1,21 @@
+# Python gereksiz dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Veri dosyaları (GitHub'a büyük veriler yüklenmez!)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep    # Klasör yapısı korunsun diye istisna
+!data/processed/.gitkeep
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
