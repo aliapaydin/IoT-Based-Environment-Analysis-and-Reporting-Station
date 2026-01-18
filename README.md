@@ -1,126 +1,70 @@
-# 🌡️ IoT Tabanlı Ortam Analiz ve Raporlama İstasyonu
+Aşağıdaki bloğu olduğu gibi kopyala ve terminale yapıştır:Markdown# 🌡️ IoT Tabanlı Ortam Analiz ve Raporlama İstasyonu
 
-> **Raspberry Pi 5** üzerinde çalışan, 7/24 ortam sıcaklığı ve nem değerlerini kaydeden, analiz eden ve görselleştiren otomatik IoT istasyonu.
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%205-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Active%20(Service)-success?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-## 📋 Proje Özeti
-Bu proje, **DHT11/DHT22** sensörleri kullanılarak ortam verilerinin toplanmasını, bu verilerin `.csv` formatında saklanmasını ve `Matplotlib/Seaborn` kütüphaneleri ile görselleştirilmesini sağlar. Sistem, **Systemd Servisi** olarak arka planda (headless) çalışacak şekilde tasarlanmıştır ve Raspberry Pi yeniden başlatılsa bile otomatik olarak devreye girer.
-
----
-
-## 🛠️ Kullanılan Donanım ve Teknolojiler
-
-### Donanım
-* **Raspberry Pi 5 (8GB)**
-* **DHT11 / DHT22** Sıcaklık ve Nem Sensörü
-* Jumper Kablolar (Dişi-Erkek / Erkek-Erkek)
-
-### Yazılım & Kütüphaneler
-* **Dil:** Python 3.11+
-* **Veri İşleme:** Pandas
-* **Görselleştirme:** Matplotlib, Seaborn
-* **Sensör Yönetimi:** Adafruit CircuitPython DHT, Adafruit Blinka
-* **GPIO Yönetimi:** RPi.GPIO ve **rpi-lgpio** (Pi 5 özel çip desteği için)
-* **Servis Yönetimi:** Systemd (Linux)
+> **Raspberry Pi 5** mimarisi üzerinde çalışan; ortam verilerini toplayan, işleyen ve görselleştiren tam otomatik IoT sistemi.
 
 ---
 
-## 📂 Proje Yapısı
-/IoT-Based-Environment-Analysis-and-Reporting-Station/ │ ├── data/ # Sensör verilerinin ve grafiklerin kaydedildiği klasör │ ├── sensor_verileri.csv │ └── sicaklik_nem_grafigi.png │ ├── src/ # Kaynak kodlar │ ├── sensor_gercek.py # Sensörden veri okuma modülü │ └── gorsellestirme.py # Grafik çizim modülü │ ├── venv/ # Python Sanal Ortamı (Virtual Environment) ├── main.py # Ana çalıştırma dosyası (Döngü burada) └── README.md # Proje dokümantasyonu
+## 📖 Proje Hakkında
+
+Bu proje, bir ortamın sıcaklık ve nem değişimlerini **7/24 kesintisiz** takip etmek amacıyla geliştirilmiştir. Sistem, "Headless" (ekransız) modda çalışacak şekilde optimize edilmiş olup, topladığı verileri analiz ederek anlamlı grafiklere dönüştürür.
+
+### 🌟 Temel Özellikler
+* ✅ **Otomatik Veri Toplama:** Her 60 saniyede bir hassas ölçüm.
+* ✅ **Kalıcı Depolama:** Verilerin `.csv` formatında tarih damgalı saklanması.
+* ✅ **Görsel Analiz:** `Matplotlib` ve `Seaborn` ile otomatik grafik üretimi.
+* ✅ **Servis Mimarisi:** `Systemd` ile arka planda, boot sırasında otomatik başlama.
+* ✅ **Hata Toleransı:** Sensör okuma hatalarına karşı "Retry" mekanizması.
+
 ---
 
-## 🚀 Kurulum Adımları (Baştan Sona)
+## 🏗️ Sistem Mimarisi
 
-Bu proje geliştirilirken karşılaşılan bağımlılık sorunlarını aşmak için aşağıdaki sıralama izlenmelidir.
+Verinin sensörden çıkıp rapora dönüşme süreci:
 
-### 1. Sistem Paketlerinin Yüklenmesi
-Raspberry Pi 5 ve Python kütüphaneleri (özellikle Matplotlib ve GPIO) için gerekli sistem paketleri:
-
-```bash
-sudo apt update
-sudo apt install python3-venv libopenjp2-7 libtiff6 libopenblas-dev liblgpio-dev -y
-2. Sanal Ortamın (Venv) Kurulması
-Sistem Python'unu kirletmemek için proje dizininde izole bir ortam oluşturulur:
-
-Bash
-
-cd ~/IoT-Based-Environment-Analysis-and-Reporting-Station
-python3 -m venv venv
+```mermaid
+graph LR
+A[DHT Sensör] -->|Veri Okuma| B(Raspberry Pi 5 / Python)
+B -->|İşleme & Kayıt| C{Veri Tabanı .csv}
+B -->|Görselleştirme| D[PNG Grafikler]
+B -->|Loglama| E[Systemd Journal]
+🛠️ Donanım ve Yazılım EnvanteriBileşenDetaylarAmaçAna KartRaspberry Pi 5 (8GB)İşlemci ve Yönetim MerkeziSensörDHT11 / DHT22Sıcaklık ve Nem VerisiOSRaspberry Pi OS (Bookworm)İşletim SistemiDilPython 3.11+Ana Yazılım DiliKütüphanerpi-lgpioPi 5 GPIO Kontrolü (Kritik)AnalizPandas, Matplotlib, SeabornVeri İşleme ve Grafik📂 Proje YapısıBash/IoT-Based-Environment-Analysis-and-Reporting-Station/
+├── 📂 data/                 # 💾 Tüm verilerin toplandığı yer
+│   ├── sensor_verileri.csv  # Ham veri deposu
+│   └── sicaklik_nem_grafigi.png # Güncel analiz grafiği
+├── 📂 src/                  # 🧠 Modüler kaynak kodlar
+│   ├── sensor_gercek.py     # Sensör sürücüsü
+│   └── gorsellestirme.py    # Grafik motoru
+├── 📂 venv/                 # 🐍 İzole Python ortamı
+├── main.py                  # 🚀 Ana servis dosyası
+└── README.md                # 📄 Dokümantasyon
+🚀 Kurulum ve YapılandırmaBu proje, Raspberry Pi 5'in yeni RP1 çip mimarisine uygun olarak kurulmalıdır.1. Sistem GereksinimleriMatplotlib ve GPIO için gerekli C kütüphaneleri:Bashsudo apt update
+sudo apt install libopenjp2-7 libtiff6 libopenblas-dev liblgpio-dev -y
+2. Sanal Ortam ve KütüphanelerBashpython3 -m venv venv
 source venv/bin/activate
-3. Python Kütüphanelerinin Yüklenmesi
-Pi 5 mimarisi için rpi-lgpio ve görselleştirme araçları yüklenir:
-
-Bash
-
+# Pi 5 uyumlu GPIO ve Analiz araçları
 pip install pandas matplotlib seaborn adafruit-circuitpython-dht adafruit-blinka rpi-lgpio --prefer-binary
-⚙️ Systemd Servisi (Otomatik Başlatma)
-Sistemin 7/24 arka planda çalışması için /etc/systemd/system/iot-station.service dosyası yapılandırılmıştır.
-
-Servis Dosyası İçeriği:
-
-Ini, TOML
-
-[Unit]
+3. Servis Kurulumu (Daemon)Sistemi arka plana atmak için /etc/systemd/system/iot-station.service dosyası oluşturulur:Ini, TOML[Unit]
 Description=IoT Ortam Analiz Istasyonu
 After=network.target
 
 [Service]
-# Python çıktılarını anlık görmek için -u parametresi kullanıldı
-ExecStart=/home/aliapaydin/IoT-Based-Environment-Analysis-and-Reporting-Station/venv/bin/python -u /home/aliapaydin/IoT-Based-Environment-Analysis-and-Reporting-Station/main.py
+ExecStart=/home/aliapaydin/.../venv/bin/python -u /home/aliapaydin/.../main.py
 WorkingDirectory=/home/aliapaydin/IoT-Based-Environment-Analysis-and-Reporting-Station
-StandardOutput=inherit
-StandardError=inherit
 Restart=always
 User=aliapaydin
 
 [Install]
 WantedBy=multi-user.target
-Servis Komutları:
-
-Başlatma: sudo systemctl start iot-station.service
-
-Durdurma: sudo systemctl stop iot-station.service
-
-Log İzleme: journalctl -u iot-station.service -f
-🐛 Karşılaşılan Zorluklar ve Çözümler (Troubleshooting)
-Bu projenin geliştirilmesi sırasında Raspberry Pi 5 mimarisi ve Linux servis yapısından kaynaklı kritik hatalar çözülmüştür:
-
-1. Raspberry Pi 5 GPIO Hatası (ModuleNotFoundError: lgpio)
-Sorun: Pi 5, eski RPi.GPIO kütüphanesini doğrudan desteklemeyen yeni bir çip yapısına (RP1) sahiptir.
-
-Çözüm: liblgpio-dev sistem paketi kuruldu ve Python tarafında pip install rpi-lgpio kullanılarak uyumluluk sağlandı.
-
-2. Servis Yol Hatası (203/EXEC)
-Sorun: Systemd, Python komutunu bulamadı.
-
-Çözüm: Servis dosyasında python yerine, sanal ortamın tam yolu (/home/.../venv/bin/python) belirtildi.
-
-3. Matplotlib Bağımlılıkları (ImportError: libopenjp2.so.7)
-Sorun: Grafik kütüphanesi, Linux tarafında eksik olan C kütüphaneleri yüzünden çalışmadı.
-
-Çözüm: apt install libopenjp2-7 vb. komutlarla eksik sistem kütüphaneleri yüklendi.
-
-4. EOFError (Input Hatası)
-Sorun: Kod servise dönüştürüldüğünde, arka planda klavye girişi (input()) beklediği için çöktü.
-
-Çözüm: main.py içerisindeki menü yapısı kaldırıldı, yerine sonsuz döngüde çalışan otomatik mod kodlandı.
-
-5. Logların Görünmemesi (Buffering)
-Sorun: Python çıktıları (print) journalctl loglarına geç düşüyordu.
-
-Çözüm: Servis komutuna -u (unbuffered) parametresi eklendi.
-
-📊 Örnek Çıktı (Loglar)
-Sistem çalıştığında terminal logları şu şekildedir:
-
-Plaintext
-
-IoT İstasyonu Servis Modunda Başlatıldı
-Otomatik Döngü: Kayıt + Analiz
+💡 Karşılaşılan Sorunlar ve Çözümler (Troubleshooting)Proje geliştirme sürecinde Raspberry Pi 5'e özgü yaşanan "Dependency Hell" (Bağımlılık Cehennemi) ve çözümleri:Hata / SorunSebepÇözümModuleNotFoundError: lgpioPi 5'in yeni GPIO yapısı eski kütüphaneleri desteklemiyor.pip install rpi-lgpio ve apt install liblgpio-dev kullanıldı.ImportError: libopenjp2...Matplotlib, Linux tabanlı C kütüphanelerini bulamadı.Eksik paketler apt ile sisteme eklendi.EOFError: reading a lineServis modunda (Headless) input() komutu çalışmaz.Menü yapısı iptal edildi, tam otomatik döngüye geçildi.Logların Geç GelmesiPython'un çıktı tamponlaması (buffering).Servis komutuna -u (unbuffered) parametresi eklendi.📊 Canlı Log ÖrneğiSistem çalışırken journalctl üzerinden alınan anlık çıktı:PlaintextIoT İstasyonu Servis Modunda Başlatıldı
 ========================================
-[Mon Jan 19 00:01:10 2026] İşlem başlıyor...
->> Sensör verisi okunuyor ve kaydediliyor...
-💾 KAYDEDİLDİ: 2026-01-19 00:02:10 | 25.6°C | %47
->> Grafikler çiziliyor...
->> İşlem başarılı. Bir sonraki döngü bekleniyor...
-👨‍💻 Geliştirici
-Ali Apaydın Tarih: 19 Ocak 2026
+[Mon Jan 19 00:05:11 2026] İşlem başlıyor...
+>> Sensör verisi okunuyor...
+💾 KAYDEDİLDİ: 2026-01-19 00:05:11 | 25.5°C | %46
+>> Grafikler güncellendi.
+>> Beklemeye geçiliyor (60sn)...
+<div align="center">Geliştirici: Ali Apaydın 2026 © IoT Environment Analysis Station Made with ❤️ & 🐍 on Raspberry Pi 5</div>
