@@ -1,6 +1,6 @@
 import sys
 import time
-from src.sensor_simulasyon import kaydet
+from src.sensor_gercek import kaydet
 from src.gorsellestirme import grafik_ciz
 
 def menu():
