@@ -2,55 +2,73 @@ import pandas as pd
 import time
 from datetime import datetime
 import os
-import random # Nem sensörümüz olmadığı için onu şimdilik simüle edeceğiz
+import board
+import adafruit_dht
+
+# Sensör Ayarları (GPIO 4 Pinine bağlı)
+# DHT11 sensörünü tanımlıyoruz
+sensor = adafruit_dht.DHT11(board.D4)
 
 # Verilerin kaydedileceği klasör
 DATA_PATH = os.path.join("data", "raw")
 os.makedirs(DATA_PATH, exist_ok=True)
 
-def cpu_sicaklik_oku():
-    """
-    Raspberry Pi'nin işlemci sıcaklığını sistem dosyasından okur.
-    """
-    try:
-        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-            temp = f.read()
-            # Değer 1000'e bölünmeli (Örn: 45000 -> 45.0 C)
-            return float(temp) / 1000.0
-    except:
-        return 0.0
-
 def veri_uret():
     """
-    Gerçek CPU sıcaklığını ve simüle edilmiş nem verisini döndürür.
+    DHT11 sensöründen gerçek sıcaklık ve nem okur.
+    Hata olursa tekrar dener.
     """
-    sicaklik = cpu_sicaklik_oku()
-    
-    # Şu an nem sensörümüz (DHT11) takılı olmadığı için 
-    # Nemi rastgele üretiyoruz (Grafik boş kalmasın diye)
-    nem = round(random.uniform(30.0, 50.0), 2)
-    
-    zaman = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    return {"Zaman": zaman, "Sicaklik": sicaklik, "Nem": nem}
-
-def kaydet(kayit_sayisi=10):
-    print(f"--- 🌡️ Gerçek CPU Sıcaklığı İzleniyor ({kayit_sayisi} Adet) ---")
-    
-    veriler = []
-    
-    for i in range(kayit_sayisi):
-        veri = veri_uret()
-        veriler.append(veri)
-        print(f"[{i+1}/{kayit_sayisi}] 🕒 {veri['Zaman']} | 🔥 İşlemci: {veri['Sicaklik']}°C | 💧 Nem: %{veri['Nem']} (Simüle)")
-        time.sleep(1) 
+    try:
+        # Sensörden okuma yap
+        sicaklik = sensor.temperature
+        nem = sensor.humidity
         
-    df = pd.DataFrame(veriler)
-    dosya_adi = f"sensor_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        # Bazen sensör None (boş) değer döndürebilir
+        if sicaklik is not None and nem is not None:
+            zaman = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return {"Zaman": zaman, "Sicaklik": sicaklik, "Nem": nem}
+        else:
+            return None
+            
+    except RuntimeError as error:
+        # DHT11 okuma hatası verirse (çok sık olur) devam et
+        return None
+    except Exception as error:
+        sensor.exit()
+        raise error
+
+def kaydet():
+    print(f"--- 🚀 IoT İstasyonu Başlatıldı (7/24 Kayıt Modu) ---")
+    
+    # Dosya adını başlatırken bir kere belirleyelim (Günlük dosya olsun)
+    bugun = datetime.now().strftime('%Y%m%d')
+    dosya_adi = f"sensor_log_{bugun}.csv"
     tam_yol = os.path.join(DATA_PATH, dosya_adi)
     
-    df.to_csv(tam_yol, index=False)
-    print(f"\n✅ Veriler kaydedildi: {tam_yol}")
+    # Eğer dosya yoksa başlıkları (header) ekleyerek oluştur
+    if not os.path.exists(tam_yol):
+        df_baslangic = pd.DataFrame(columns=["Zaman", "Sicaklik", "Nem"])
+        df_baslangic.to_csv(tam_yol, index=False)
+
+    while True: # Sonsuz döngü
+        veri = veri_uret()
+        
+        if veri is not None:
+            # Ekrana yaz (Loglarda görmek için)
+            print(f"💾 KAYDEDİLDİ: {veri['Zaman']} | {veri['Sicaklik']}°C | %{veri['Nem']}")
+            
+            # Veriyi tek satırlık DataFrame yap
+            df_yeni = pd.DataFrame([veri])
+            
+            # Mevcut CSV dosyasının altına ekle (append mode)
+            df_yeni.to_csv(tam_yol, mode='a', header=False, index=False)
+            
+        else:
+            print("⚠️ Sensör okuma hatası, tekrar deneniyor...")
+        
+        # 60 Saniye bekle (Dakikada 1 ölçüm idealdir, diski yormaz)
+        time.sleep(60)
 
 if __name__ == "__main__":
-    kaydet(10)
+    # Parametre vermiyoruz, sonsuz çalışacak
+    kaydet()

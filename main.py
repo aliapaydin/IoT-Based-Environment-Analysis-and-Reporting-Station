@@ -1,48 +1,36 @@
-import sys
 import time
+# Önceki loglardan gördüğümüz importlar
 from src.sensor_gercek import kaydet
 from src.gorsellestirme import grafik_ciz
 
-def menu():
-    print("\n" + "="*40)
-    print("   IoT İSTASYONU YÖNETİM PANELİ")
-    print("="*40)
-    print("1. Yeni Veri Üret ve Kaydet")
-    print("2. Mevcut Veriyi Analiz Et (Grafik)")
-    print("3. Otomatik Mod (Üret + Analiz Et)")
-    print("q. Çıkış")
-    print("-" * 40)
-    
-    secim = input("Seçiminiz: ")
-    return secim
-
 def main():
+    print("========================================")
+    print("IoT İstasyonu Servis Modunda Başlatıldı")
+    print("Otomatik Döngü: Kayıt + Analiz")
+    print("========================================")
+
+    # Servisin sürekli çalışması için sonsuz döngü
     while True:
-        secim = menu()
-        
-        if secim == '1':
-            adet = int(input("Kaç adet veri üretilsin? (Örn: 20): "))
-            kaydet(adet)
-            print("\n✅ Veri üretimi tamamlandı.")
-            
-        elif secim == '2':
-            try:
-                grafik_ciz()
-            except Exception as e:
-                print(f"❌ Hata: {e}")
-                
-        elif secim == '3':
-            print("\n🔄 Otomatik mod başlatılıyor...")
-            kaydet(20) # 20 adet üretir
-            time.sleep(1)
+        try:
+            print(f"\n[{time.ctime()}] İşlem başlıyor...")
+
+            # 1. Adım: Sensörden veriyi oku ve kaydet
+            print(">> Sensör verisi okunuyor ve kaydediliyor...")
+            kaydet()
+
+            # 2. Adım: Grafikleri oluştur/güncelle
+            print(">> Grafikler çiziliyor...")
             grafik_ciz()
-            
-        elif secim.lower() == 'q':
-            print("Çıkış yapılıyor... Görüşmek üzere! 👋")
-            break
-            
-        else:
-            print("❌ Geçersiz seçim, tekrar deneyin.")
+
+            print(">> İşlem başarılı. Bir sonraki döngü bekleniyor...")
+
+        except Exception as e:
+            # Hata olursa servis çökmesin, loga yazıp devam etsin
+            print(f"HATA OLUŞTU: {e}")
+
+        # 3. Adım: Bekleme Süresi (Saniye cinsinden)
+        # Burayı isteğine göre değiştirebilirsin (Örn: 300 = 5 dakika)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
