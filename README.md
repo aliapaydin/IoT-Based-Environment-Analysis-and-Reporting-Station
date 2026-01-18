@@ -28,10 +28,10 @@ Verinin sensörden çıkıp rapora dönüşme süreci:
 
 ```mermaid
 graph LR
-A[DHT Sensör] -->|Veri Okuma| B(Raspberry Pi 5 / Python)
-B -->|İşleme & Kayıt| C{Veri Tabanı .csv}
-B -->|Görselleştirme| D[PNG Grafikler]
-B -->|Loglama| E[Systemd Journal]
+    A[DHT Sensör] -->|Veri Okuma| B(Raspberry Pi 5 / Python)
+    B -->|İşleme & Kayıt| C{Veri Tabanı .csv}
+    B -->|Görselleştirme| D[PNG Grafikler]
+    B -->|Loglama| E[Systemd Journal]
 🛠️ Donanım ve Yazılım EnvanteriBileşenDetaylarAmaçAna KartRaspberry Pi 5 (8GB)İşlemci ve Yönetim MerkeziSensörDHT11 / DHT22Sıcaklık ve Nem VerisiOSRaspberry Pi OS (Bookworm)İşletim SistemiDilPython 3.11+Ana Yazılım DiliKütüphanerpi-lgpioPi 5 GPIO Kontrolü (Kritik)AnalizPandas, Matplotlib, SeabornVeri İşleme ve Grafik📂 Proje YapısıBash/IoT-Based-Environment-Analysis-and-Reporting-Station/
 ├── 📂 data/                 # 💾 Tüm verilerin toplandığı yer
 │   ├── sensor_verileri.csv  # Ham veri deposu
