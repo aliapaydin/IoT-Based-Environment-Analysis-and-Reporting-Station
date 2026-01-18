@@ -1,4 +1,4 @@
-🌡️ IoT Tabanlı Ortam Analiz ve Raporlama İstasyonu
+# 🌡️ IoT Tabanlı Ortam Analiz ve Raporlama İstasyonu
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%205-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white)
