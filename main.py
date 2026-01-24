@@ -1,36 +1,31 @@
 import time
-# Önceki loglardan gördüğümüz importlar
-from src.sensor_gercek import kaydet
-from src.gorsellestirme import grafik_ciz
+from src.sensor_gercek import tek_seferlik_kayit
 
 def main():
     print("========================================")
-    print("IoT İstasyonu Servis Modunda Başlatıldı")
-    print("Otomatik Döngü: Kayıt + Analiz")
+    print("📡 IoT Veri Toplayıcı Başlatıldı")
+    print("💾 Veriler arka planda kaydediliyor...")
+    print("📊 Grafikleri görmek için yeni terminalde Streamlit'i çalıştırın.")
     print("========================================")
 
-    # Servisin sürekli çalışması için sonsuz döngü
     while True:
         try:
-            print(f"\n[{time.ctime()}] İşlem başlıyor...")
+            # Sadece kayıt işlemini çağırıyoruz
+            basarili = tek_seferlik_kayit()
 
-            # 1. Adım: Sensörden veriyi oku ve kaydet
-            print(">> Sensör verisi okunuyor ve kaydediliyor...")
-            kaydet()
+            if basarili:
+                print(f"[{time.strftime('%H:%M:%S')}] >> Veri eklendi. Uyku moduna geçiliyor...")
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] >> Veri alınamadı. Tekrar denenecek.")
 
-            # 2. Adım: Grafikleri oluştur/güncelle
-            print(">> Grafikler çiziliyor...")
-            grafik_ciz()
-
-            print(">> İşlem başarılı. Bir sonraki döngü bekleniyor...")
-
+        except KeyboardInterrupt:
+            print("\n🛑 Program kullanıcı tarafından durduruldu.")
+            break
         except Exception as e:
-            # Hata olursa servis çökmesin, loga yazıp devam etsin
-            print(f"HATA OLUŞTU: {e}")
+            print(f"⚠️ ANA DÖNGÜ HATASI: {e}")
 
-        # 3. Adım: Bekleme Süresi (Saniye cinsinden)
-        # Burayı isteğine göre değiştirebilirsin (Örn: 300 = 5 dakika)
-        time.sleep(60)
+        # 30 Saniye bekle (İsteğe göre 60 yapabilirsiniz)
+        time.sleep(30)
 
 if __name__ == "__main__":
     main()

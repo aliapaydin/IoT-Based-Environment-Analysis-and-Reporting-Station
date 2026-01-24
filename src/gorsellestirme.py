@@ -1,54 +1,83 @@
+import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import glob
 import os
+from datetime import datetime
+import time
 
-# Veri klasörü
-DATA_PATH = os.path.join("data", "raw")
+# --- SAYFA AYARLARI ---
+st.set_page_config(
+    page_title="IoT Çevre Analiz İstasyonu",
+    page_icon="🌡️",
+    layout="wide"
+)
 
-def en_yeni_dosyayi_bul():
+# --- VERİ YÜKLEME FONKSİYONU ---
+def veriyi_getir():
     """
-    data/raw klasöründeki en son tarihli CSV dosyasını bulur.
+    Bugünün tarihli CSV dosyasını bulur ve yükler.
     """
-    dosyalar = glob.glob(os.path.join(DATA_PATH, "*.csv"))
-    if not dosyalar:
-        raise FileNotFoundError("Hiç veri dosyası (CSV) bulunamadı! Önce sensor_simulasyon.py çalıştırın.")
+    data_path = os.path.join("data", "raw")
+    bugun = datetime.now().strftime('%Y%m%d')
+    dosya_adi = f"sensor_log_{bugun}.csv"
+    tam_yol = os.path.join(data_path, dosya_adi)
+
+    if os.path.exists(tam_yol):
+        try:
+            df = pd.read_csv(tam_yol)
+            # Zaman sütununu datetime formatına çevir
+            df["Zaman"] = pd.to_datetime(df["Zaman"])
+            return df
+        except Exception as e:
+            st.error(f"Veri okunurken hata oluştu: {e}")
+            return None
+    else:
+        return None
+
+# --- ARAYÜZ TASARIMI ---
+st.title("🌱 IoT Tabanlı Çevre Analiz İstasyonu")
+st.markdown("Raspberry Pi 5 & DHT11 Sensör Verileri")
+
+# Veriyi Yükle
+df = veriyi_getir()
+
+if df is not None and not df.empty:
+    # Son okunan değerleri al
+    son_kayit = df.iloc[-1]
     
-    # Dosyaları oluşturulma tarihine göre sırala ve en sonuncuyu al
-    en_yeni_dosya = max(dosyalar, key=os.path.getctime)
-    print(f"📂 Analiz edilen dosya: {en_yeni_dosya}")
-    return en_yeni_dosya
-
-def grafik_ciz():
-    csv_dosyasi = en_yeni_dosyayi_bul()
-    df = pd.read_csv(csv_dosyasi)
-
-    # Zaman sütununu datetime formatına çevir (Grafikte düzgün görünsün)
-    df["Zaman"] = pd.to_datetime(df["Zaman"])
-
-    # Grafik Alanı Oluştur (2 satır, 1 sütun)
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+    # 1. BÖLÜM: METRİKLER (Kartlar)
+    col1, col2, col3 = st.columns(3)
     
-    # 1. Grafik: Sıcaklık
-    ax1.plot(df["Zaman"], df["Sicaklik"], color="tab:red", marker="o", linestyle="-")
-    ax1.set_title("Sıcaklık Değişimi (°C)")
-    ax1.set_ylabel("Sıcaklık")
-    ax1.grid(True, linestyle="--", alpha=0.6)
-
-    # 2. Grafik: Nem
-    ax2.plot(df["Zaman"], df["Nem"], color="tab:blue", marker="s", linestyle="-")
-    ax2.set_title("Nem Değişimi (%)")
-    ax2.set_ylabel("Nem")
-    ax2.set_xlabel("Zaman")
-    ax2.grid(True, linestyle="--", alpha=0.6)
-
-    # Tarih formatını güzelleştir
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    with col1:
+        st.metric(label="🌡️ Sıcaklık", value=f"{son_kayit['Sicaklik']} °C", delta=f"{df['Sicaklik'].diff().iloc[-1]:.1f} °C")
     
-    # Grafiği göster
-    print("📊 Grafik oluşturuluyor...")
-    plt.show()
+    with col2:
+        st.metric(label="💧 Nem", value=f"% {son_kayit['Nem']}", delta=f"{df['Nem'].diff().iloc[-1]:.1f} %")
+        
+    with col3:
+        st.metric(label="🕒 Son Güncelleme", value=son_kayit['Zaman'].strftime('%H:%M:%S'))
 
-if __name__ == "__main__":
-    grafik_ciz()
+    st.divider()
+
+    # 2. BÖLÜM: GRAFİKLER
+    col_graph1, col_graph2 = st.columns(2)
+
+    with col_graph1:
+        st.subheader("Sıcaklık Değişimi (°C)")
+        # Streamlit'in kendi line chart'ı çok hızlıdır
+        st.line_chart(df, x="Zaman", y="Sicaklik", color="#FF4B4B")
+
+    with col_graph2:
+        st.subheader("Nem Değişimi (%)")
+        st.line_chart(df, x="Zaman", y="Nem", color="#0068C9")
+
+    # 3. BÖLÜM: VERİ TABLOSU (İsteğe bağlı açılır kapanır)
+    with st.expander("📄 Ham Verileri Göster"):
+        st.dataframe(df.sort_values(by="Zaman", ascending=False), use_container_width=True)
+
+else:
+    st.warning("⚠️ Bugün için henüz veri kaydı bulunamadı. 'main.py' çalışıyor mu?")
+    st.info("Veri bekleniyor... Sayfayı yenileyebilirsiniz.")
+
+# Otomatik Yenileme Butonu (Manuel)
+if st.button('🔄 Verileri Şimdi Yenile'):
+    st.rerun()
